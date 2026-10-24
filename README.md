@@ -522,3 +522,19 @@ SELECT * FROM source_users
 UNION ALL
 SELECT * FROM unknown_user
 ```
+
+### Visual Pipeline Flow
+```mermaid
+graph TD
+    A[Upstream Systems] -->|Event JSON| B(Python Ingestion Script)
+    B -->|Masks PII & Maps Alias| C{Schema Check}
+    C -->|New Column| D[ALTER TABLE]
+    C -->|Matches Schema| E[SQLAlchemy Insert]
+    D --> E
+    E -->|Success| F[(PostgreSQL: raw_events)]
+    E -->|Type Collision / Fail| G[(PostgreSQL: dlq_audit_log)]
+    G -->|02_auto_healers.py| B
+    F -->|dbt build| H[stg_raw_events]
+    H -->|dbt-expectations| I{Data Quality Tests}
+    I -->|Pass| J[(dim_users / downstream marts)]
+    I -->|Relationships Test Fail| K[Pipeline Halts]
