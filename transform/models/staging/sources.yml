@@ -1,0 +1,31 @@
+version: 2
+
+sources:
+  - name: analytics
+    description: "The raw schema where the Python ingestion script lands data."
+    database: postgres
+    tables:
+      - name: raw_events
+        description: "Raw event data containing both standard batches and auto-healed micro-batches from the DLQ."
+        columns:
+          - name: event_id
+            description: "The unique business key for the event."
+            tests:
+              - not_null
+          - name: filehash
+            description: "MD5 hash of the business columns for exact-match deduplication."
+          - name: batch_id
+            description: "The Airflow run ID or auto-heal batch identifier."
+          - name: age
+            tests:
+              - dbt_expectations.expect_column_values_to_be_between:
+                  min_value: 0
+                  max_value: 120
+                  config:
+                    severity: warn
+          - name: event_type
+            tests:
+              - dbt_expectations.expect_column_values_to_be_in_set:
+                  value_set: ['click', 'purchase', 'login', 'logout', 'view', 'scroll']
+                  config:
+                    severity: warn

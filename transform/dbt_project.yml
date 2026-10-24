@@ -1,0 +1,10 @@
+name: "idempotent_ingestion_test"
+version: "1.0.0"
+config-version: 2
+profile: "idempotent_ingestion_test"
+model-paths: ["models"]
+
+models:
+  idempotent-ingestion-test:
+    staging:
+      +materialized: table

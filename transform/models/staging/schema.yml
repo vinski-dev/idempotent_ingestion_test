@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: dim_users
+    description: "Kimball-style dimension table for users, including a default -1 row for unknown users."
+    columns:
+      - name: user_id
+        description: "Primary key for the user dimension."
+        tests:
+          - unique
+          - not_null
+  - name: stg_raw_events
+    description: "The deduplicated, incrementally loaded staging events table."
+    columns:
+      - name: user_id
+        description: "The user who performed the event. Coalesced to -1 if missing."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_users')
+              field: user_id
